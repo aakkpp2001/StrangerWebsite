@@ -34,7 +34,7 @@ export default {
           300: '#E8B97A',
           400: '#D9A45C',
           500: '#C48A42',
-          600: '#A671331',
+          600: '#A67133',
         },
         // Desaturated teal — distant celestial glow
         astral: {

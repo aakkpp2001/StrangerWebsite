@@ -1,24 +1,22 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Mail } from 'lucide-react';
-import Starfield from '@/components/Starfield';
+import PixelArtCanvas from '@/components/PixelArtCanvas';
+import { drawCTAScene } from '@/components/pixelart/CTAScene';
 
 export default function FinalCTA() {
   return (
     <section className="relative py-32 md:py-48 overflow-hidden">
-      {/* Deep space background */}
+      {/* Pixel-art deep space scene */}
       <div className="absolute inset-0 z-0">
-        <img
-          src="https://images.pexels.com/photos/8148340/pexels-photo-8148340.jpeg?auto=compress&cs=tinysrgb&w=1920"
-          alt="A star-filled sky with a distant nebula"
-          className="w-full h-full object-cover opacity-30"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-void-950 via-void-950/60 to-void-950" />
+        <PixelArtCanvas draw={drawCTAScene} scale={3} />
+        <div className="absolute inset-0 bg-gradient-to-b from-void-950/40 via-void-950/30 to-void-950" />
       </div>
 
-      <Starfield density={50} className="z-[1] opacity-40" />
-
       {/* Vignette */}
-      <div className="absolute inset-0 z-[2] pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, transparent 30%, rgba(7,10,15,0.8) 100%)' }} />
+      <div
+        className="absolute inset-0 z-[2] pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse at center, transparent 30%, rgba(7,10,15,0.7) 100%)' }}
+      />
 
       <div className="relative z-10 max-w-3xl mx-auto px-6 md:px-10 text-center">
         <h2 className="font-serif text-4xl md:text-6xl text-cream-100 font-light italic leading-tight mb-8 text-glow">

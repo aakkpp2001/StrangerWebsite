@@ -1,21 +1,18 @@
-import Starfield from '@/components/Starfield';
+import PixelArtCanvas from '@/components/PixelArtCanvas';
+import { drawNostalgiaScene } from '@/components/pixelart/NostalgiaScene';
 
 export default function Nostalgia() {
   return (
     <section className="relative py-24 md:py-40 overflow-hidden">
-      {/* Warmer background — nostalgic TV glow */}
       <div className="absolute inset-0 z-0">
-        <img
-          src="https://images.pexels.com/photos/13279672/pexels-photo-13279672.jpeg?auto=compress&cs=tinysrgb&w=1920"
-          alt="An old retro TV set in a dark room, glowing with nostalgic light"
-          className="w-full h-full object-cover opacity-25"
-        />
         <div className="absolute inset-0 bg-gradient-to-b from-void-950 via-dusk-950/50 to-void-950" />
-        {/* Warm overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-ember-500/5 via-transparent to-dusk-800/10" />
       </div>
 
-      <Starfield density={40} className="z-[1] opacity-30" />
+      {/* Pixel-art nostalgia scene — CRT TV glowing in a dark room */}
+      <div className="absolute right-0 bottom-0 w-full md:w-1/2 h-64 md:h-full opacity-30 z-0">
+        <PixelArtCanvas draw={drawNostalgiaScene} scale={3} />
+      </div>
 
       <div className="relative z-10 max-w-3xl mx-auto px-6 md:px-10 text-center">
         <p className="font-pixel text-[8px] text-ember-400/70 tracking-nostalgic mb-8">

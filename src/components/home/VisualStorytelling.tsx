@@ -1,28 +1,18 @@
+import PixelArtCanvas from '@/components/PixelArtCanvas';
+import {
+  drawTownScene,
+  drawShipInterior,
+  drawConversationScene,
+  drawPlanetScene,
+  drawStructureScene,
+} from '@/components/pixelart/GalleryScenes';
+
 const scenes = [
-  {
-    src: 'https://images.pexels.com/photos/20101316/pexels-photo-20101316.jpeg?auto=compress&cs=tinysrgb&w=1200',
-    alt: 'A lone figure walking through a foggy illuminated street at night',
-    span: 'md:col-span-2',
-    height: 'h-64 md:h-80',
-  },
-  {
-    src: 'https://images.pexels.com/photos/7651301/pexels-photo-7651301.jpeg?auto=compress&cs=tinysrgb&w=800',
-    alt: 'A dark moody interior of an abandoned industrial space with natural light',
-    span: '',
-    height: 'h-64 md:h-80',
-  },
-  {
-    src: 'https://images.pexels.com/photos/35030856/pexels-photo-35030856.jpeg?auto=compress&cs=tinysrgb&w=800',
-    alt: 'A narrow cobblestone street illuminated by warm lights at night',
-    span: '',
-    height: 'h-64 md:h-80',
-  },
-  {
-    src: 'https://images.pexels.com/photos/32947933/pexels-photo-32947933.jpeg?auto=compress&cs=tinysrgb&w=1200',
-    alt: 'Two people silhouetted against a sunset on a serene desert landscape',
-    span: 'md:col-span-2',
-    height: 'h-64 md:h-80',
-  },
+  { draw: drawTownScene, alt: 'A quiet alien town at night', span: 'md:col-span-2', height: 'h-64 md:h-80' },
+  { draw: drawShipInterior, alt: 'A quiet spaceship interior with a viewing port', span: '', height: 'h-64 md:h-80' },
+  { draw: drawConversationScene, alt: 'Two characters in a nighttime conversation', span: '', height: 'h-64 md:h-80' },
+  { draw: drawPlanetScene, alt: 'A mysterious alien planet landscape with two moons', span: 'md:col-span-2', height: 'h-64 md:h-80' },
+  { draw: drawStructureScene, alt: 'An ancient unexplained structure', span: '', height: 'h-64 md:h-80' },
 ];
 
 export default function VisualStorytelling() {
@@ -45,14 +35,10 @@ export default function VisualStorytelling() {
           {scenes.map((scene, index) => (
             <div
               key={index}
-              className={`group relative overflow-hidden rounded-sm ${scene.span}`}
+              className={`group relative overflow-hidden rounded-sm bg-void-950 ${scene.span} ${scene.height}`}
             >
-              <img
-                src={scene.src}
-                alt={scene.alt}
-                className={`w-full ${scene.height} object-cover transition-all duration-[3000ms] group-hover:scale-105`}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-void-950/70 via-transparent to-transparent opacity-60 group-hover:opacity-30 transition-opacity duration-700" />
+              <PixelArtCanvas draw={scene.draw} scale={3} />
+              <div className="absolute inset-0 bg-gradient-to-t from-void-950/50 via-transparent to-transparent opacity-60 group-hover:opacity-20 transition-opacity duration-700 pointer-events-none" />
             </div>
           ))}
         </div>

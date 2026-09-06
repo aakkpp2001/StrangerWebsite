@@ -1,16 +1,9 @@
+import PixelArtCanvas from '@/components/PixelArtCanvas';
+import { drawWorldScene } from '@/components/pixelart/WorldScene';
+
 export default function WorldIntro() {
   return (
     <section id="world" className="relative py-24 md:py-40 overflow-hidden">
-      {/* Ambient background — distant planet/moon */}
-      <div className="absolute inset-0 z-0">
-        <img
-          src="https://images.pexels.com/photos/30596303/pexels-photo-30596303.png?auto=compress&cs=tinysrgb&w=1920"
-          alt="Earth and its moon floating in the vast expanse of space"
-          className="w-full h-full object-cover opacity-20"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-void-950 via-void-950/80 to-void-950" />
-      </div>
-
       <div className="relative z-10 max-w-5xl mx-auto px-6 md:px-10">
         <div className="grid md:grid-cols-2 gap-12 md:gap-20 items-center">
           {/* Text */}
@@ -32,16 +25,12 @@ export default function WorldIntro() {
             </p>
           </div>
 
-          {/* Image — atmospheric environment */}
+          {/* Pixel-art scene — alien world */}
           <div className="relative group">
             <div className="absolute -inset-1 bg-gradient-to-tr from-dusk-800/30 to-astral-600/20 rounded-sm blur-xl opacity-60 group-hover:opacity-90 transition-opacity duration-1000" />
-            <div className="relative overflow-hidden rounded-sm">
-              <img
-                src="https://images.pexels.com/photos/12363164/pexels-photo-12363164.jpeg?auto=compress&cs=tinysrgb&w=1200"
-                alt="A mysterious fog-laden path through a dense forest"
-                className="w-full h-80 md:h-96 object-cover transition-transform duration-[3000ms] group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-void-950/60 via-transparent to-transparent" />
+            <div className="relative overflow-hidden rounded-sm h-80 md:h-96 bg-void-950">
+              <PixelArtCanvas draw={drawWorldScene} scale={3} />
+              <div className="absolute inset-0 bg-gradient-to-t from-void-950/40 via-transparent to-transparent pointer-events-none" />
             </div>
           </div>
         </div>

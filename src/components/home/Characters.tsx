@@ -1,21 +1,24 @@
+import PixelArtCanvas from '@/components/PixelArtCanvas';
+import { drawCharacterPortrait } from '@/components/pixelart/CharacterScenes';
+
 const characters = [
   {
     number: '01',
     name: 'THE TRAVELER',
     description: 'Someone searching for answers in a universe that seems determined to keep them hidden.',
-    image: 'https://images.pexels.com/photos/11296201/pexels-photo-11296201.jpeg?auto=compress&cs=tinysrgb&w=800',
+    variant: 0,
   },
   {
     number: '02',
     name: 'THE STRANGER',
     description: 'Someone who knows more than they are willing to say.',
-    image: 'https://images.pexels.com/photos/14683725/pexels-photo-14683725.jpeg?auto=compress&cs=tinysrgb&w=800',
+    variant: 1,
   },
   {
     number: '03',
     name: 'THE ONE WHO REMEMBERS',
     description: 'Some memories are better left forgotten. Others are impossible to escape.',
-    image: 'https://images.pexels.com/photos/8247082/pexels-photo-8247082.jpeg?auto=compress&cs=tinysrgb&w=800',
+    variant: 2,
   },
 ];
 
@@ -42,14 +45,10 @@ export default function Characters() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
           {characters.map((char) => (
             <div key={char.number} className="group">
-              {/* Image */}
-              <div className="relative overflow-hidden rounded-sm mb-6">
-                <img
-                  src={char.image}
-                  alt={char.name}
-                  className="w-full h-72 md:h-80 object-cover transition-transform duration-[2000ms] group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-void-950 via-void-950/20 to-transparent" />
+              {/* Pixel-art portrait */}
+              <div className="relative overflow-hidden rounded-sm mb-6 h-72 md:h-80 bg-void-950">
+                <PixelArtCanvas draw={(ctx, w, h, time) => drawCharacterPortrait(ctx, w, h, time, char.variant)} scale={3} />
+                <div className="absolute inset-0 bg-gradient-to-t from-void-950/60 via-transparent to-transparent pointer-events-none" />
                 {/* Number */}
                 <span className="absolute top-4 left-5 font-pixel text-[8px] text-ember-400/70 tracking-nostalgic">
                   {char.number}
