@@ -1,25 +1,25 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import Home from '@/pages/Home';
+import About from '@/pages/About';
+import Contact from '@/pages/Contact';
+
 function App() {
   return (
-    <div className="min-h-screen bg-void-950 grain relative">
-      <div className="vignette absolute inset-0 pointer-events-none" />
-      <div className="relative z-10 flex min-h-screen items-center justify-center px-6">
-        <div className="animate-fade-up text-center max-w-2xl">
-          <p className="font-pixel text-[10px] text-ember-400 tracking-nostalgic mb-8">
-            STRANGER
-          </p>
-          <h1 className="font-serif text-5xl md:text-6xl text-cream-100 text-glow italic font-light leading-tight mb-6">
-            Some memories
-            <br />
-            travel farther than light.
-          </h1>
-          <div className="divider-warm mx-auto w-32 my-8" />
-          <p className="font-body text-cream-400 text-lg font-light leading-relaxed">
-            A point-and-click sci-fi RPG about the worlds we leave behind,
-            the people we carry with us, and the distance between.
-          </p>
-        </div>
+    <BrowserRouter>
+      <div className="min-h-screen bg-void-950 grain relative">
+        <Navbar />
+        <main>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+          </Routes>
+        </main>
+        <Footer />
       </div>
-    </div>
+    </BrowserRouter>
   );
 }
 
