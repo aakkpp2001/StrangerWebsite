@@ -1,13 +1,15 @@
-import { px, circle, glowCircle, stars, smoothNoise } from '@/components/PixelArtCanvas';
+import { px, fillRow, circle, glowCircle, stars, smoothNoise } from '@/components/PixelArtCanvas';
 
 // Scene 1: Quiet alien town at night
 export function drawTownScene(ctx: CanvasRenderingContext2D, w: number, h: number, time: number) {
-  // Sky
-  for (let y = 0; y < h; y++) {
-    const t = y / h;
-    px(ctx, 0, y, w, 1, `rgb(${Math.floor(8 + t * 15)},${Math.floor(10 + t * 8)},${Math.floor(20 + t * 20)})`);
-  }
-  stars(ctx, w, h * 0.6, 40, 1.0, time, 0, h * 0.5);
+  // Sky — gradient
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, 'rgb(8, 10, 20)');
+  grad.addColorStop(1, 'rgb(23, 18, 40)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+
+  stars(ctx, w, h * 0.6, 30, 1.0, time, 0, h * 0.5);
 
   // Moon
   circle(ctx, w * 0.8, h * 0.2, 5, '#D9A45C');
@@ -17,7 +19,7 @@ export function drawTownScene(ctx: CanvasRenderingContext2D, w: number, h: numbe
   const horizon = Math.floor(h * 0.55);
   px(ctx, 0, horizon, w, h - horizon, '#0B0F18');
 
-  // Buildings — alien town
+  // Buildings
   const buildings = [
     { x: 0.1, bw: 0.08, bh: 0.2 },
     { x: 0.2, bw: 0.06, bh: 0.15 },
@@ -33,7 +35,6 @@ export function drawTownScene(ctx: CanvasRenderingContext2D, w: number, h: numbe
     const bh = Math.floor(b.bh * h);
     px(ctx, bx, horizon - bh, bw, bh, '#111726');
     px(ctx, bx - 1, horizon - bh, bw + 2, 1, '#1B1428');
-    // Windows
     for (let wy = 0; wy < bh - 2; wy += 4) {
       for (let wx = 0; wx < bw - 2; wx += 4) {
         if ((wx + wy) % 8 === 0) {
@@ -47,23 +48,26 @@ export function drawTownScene(ctx: CanvasRenderingContext2D, w: number, h: numbe
   // Fog
   for (let y = horizon - 3; y < horizon + 5; y++) {
     const a = 0.06 * (1 - Math.abs(y - horizon) / 4);
-    px(ctx, 0, y, w, 1, `rgba(82, 64, 107, ${a})`);
+    fillRow(ctx, y, w, `rgba(82, 64, 107, ${a})`);
   }
 }
 
 // Scene 2: Spaceship interior
 export function drawShipInterior(ctx: CanvasRenderingContext2D, w: number, h: number, time: number) {
-  // Dark interior
-  for (let y = 0; y < h; y++) {
-    px(ctx, 0, y, w, 1, `rgb(${10 + Math.floor(y / h * 5)},${12},${18})`);
-  }
+  // Dark interior — gradient
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, 'rgb(10, 12, 18)');
+  grad.addColorStop(1, 'rgb(15, 12, 23)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
 
   // Wall panels
+  ctx.fillStyle = '#1A2133';
   for (let x = 0; x < w; x += 12) {
-    px(ctx, x, 0, 1, h, '#1A2133');
+    ctx.fillRect(x, 0, 1, h);
   }
   for (let y = 0; y < h; y += 12) {
-    px(ctx, 0, y, w, 1, '#1A2133');
+    ctx.fillRect(0, y, w, 1);
   }
 
   // Window — viewing port
@@ -72,14 +76,12 @@ export function drawShipInterior(ctx: CanvasRenderingContext2D, w: number, h: nu
   const vw = Math.floor(w * 0.3);
   const vh = Math.floor(h * 0.4);
   px(ctx, vx, vy, vw, vh, '#070A0F');
-  // Stars through window
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < 20; i++) {
     const sx = vx + 2 + Math.floor(((i * 43) % 100) / 100 * (vw - 4));
     const sy = vy + 2 + Math.floor(((i * 79) % 100) / 100 * (vh - 4));
     const tw = 0.3 + 0.7 * Math.abs(Math.sin(time * 0.4 + i));
     px(ctx, sx, sy, 1, 1, `rgba(250, 246, 238, ${tw * 0.6})`);
   }
-  // Frame
   px(ctx, vx - 1, vy, 1, vh, '#252E44');
   px(ctx, vx + vw, vy, 1, vh, '#252E44');
   px(ctx, vx, vy - 1, vw, 1, '#252E44');
@@ -96,13 +98,14 @@ export function drawShipInterior(ctx: CanvasRenderingContext2D, w: number, h: nu
     px(ctx, lx, cpY + 3, 1, 1, on ? `rgba(${colors[i % 3]}, 0.8)` : 'rgba(27, 20, 40, 0.5)');
   }
 
-  // Ambient glow from window
-  for (let i = 0; i < 30; i++) {
-    const a = 0.03 * (1 - i / 30);
-    px(ctx, vx, vy + vh + i, vw, 1, `rgba(91, 138, 148, ${a})`);
-  }
+  // Ambient glow from window — gradient
+  const glowGrad = ctx.createLinearGradient(0, vy + vh, 0, h);
+  glowGrad.addColorStop(0, 'rgba(91, 138, 148, 0.03)');
+  glowGrad.addColorStop(1, 'rgba(91, 138, 148, 0)');
+  ctx.fillStyle = glowGrad;
+  ctx.fillRect(vx, vy + vh, vw, h - vy - vh);
 
-  // A seat / chair silhouette
+  // Seat silhouette
   const chX = Math.floor(w * 0.2);
   px(ctx, chX, h - 20, 8, 12, '#1B1428');
   px(ctx, chX - 1, h - 20, 10, 1, '#2A1F3D');
@@ -112,9 +115,8 @@ export function drawShipInterior(ctx: CanvasRenderingContext2D, w: number, h: nu
 // Scene 3: Nighttime conversation
 export function drawConversationScene(ctx: CanvasRenderingContext2D, w: number, h: number, time: number) {
   // Dark warm room
-  for (let y = 0; y < h; y++) {
-    px(ctx, 0, y, w, 1, `rgb(${14},${10},${16})`);
-  }
+  ctx.fillStyle = '#0E0A10';
+  ctx.fillRect(0, 0, w, h);
 
   // Window with starry sky
   const wx = Math.floor(w * 0.5);
@@ -122,7 +124,7 @@ export function drawConversationScene(ctx: CanvasRenderingContext2D, w: number, 
   const ww = Math.floor(w * 0.35);
   const wh = Math.floor(h * 0.3);
   px(ctx, wx, wy, ww, wh, '#070A0F');
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 15; i++) {
     const sx = wx + 2 + Math.floor(((i * 53) % 100) / 100 * (ww - 4));
     const sy = wy + 2 + Math.floor(((i * 67) % 100) / 100 * (wh - 4));
     px(ctx, sx, sy, 1, 1, `rgba(250, 246, 238, ${0.3 + 0.4 * Math.sin(time + i)})`);
@@ -134,14 +136,12 @@ export function drawConversationScene(ctx: CanvasRenderingContext2D, w: number, 
 
   // Two figures facing each other
   const baseY = h - 6;
-  // Figure 1 — left, facing right
-  px(ctx, Math.floor(w * 0.15), baseY - 14, 4, 3, '#2A1F3D'); // head
-  px(ctx, Math.floor(w * 0.14), baseY - 11, 6, 8, '#2A1F3D'); // body
-  px(ctx, Math.floor(w * 0.12), baseY - 10, 2, 4, '#1B1428'); // arm
-  // Figure 2 — right, facing left
-  px(ctx, Math.floor(w * 0.72), baseY - 14, 4, 3, '#3D2E54'); // head
-  px(ctx, Math.floor(w * 0.71), baseY - 11, 6, 8, '#3D2E54'); // body
-  px(ctx, Math.floor(w * 0.76), baseY - 10, 2, 4, '#2A1F3D'); // arm
+  px(ctx, Math.floor(w * 0.15), baseY - 14, 4, 3, '#2A1F3D');
+  px(ctx, Math.floor(w * 0.14), baseY - 11, 6, 8, '#2A1F3D');
+  px(ctx, Math.floor(w * 0.12), baseY - 10, 2, 4, '#1B1428');
+  px(ctx, Math.floor(w * 0.72), baseY - 14, 4, 3, '#3D2E54');
+  px(ctx, Math.floor(w * 0.71), baseY - 11, 6, 8, '#3D2E54');
+  px(ctx, Math.floor(w * 0.76), baseY - 10, 2, 4, '#2A1F3D');
 
   // Warm light between them
   const lx = Math.floor(w * 0.44);
@@ -156,19 +156,21 @@ export function drawConversationScene(ctx: CanvasRenderingContext2D, w: number, 
 
 // Scene 4: Mysterious planet landscape
 export function drawPlanetScene(ctx: CanvasRenderingContext2D, w: number, h: number, time: number) {
-  // Alien sky — two moons
-  for (let y = 0; y < h; y++) {
-    const t = y / h;
-    px(ctx, 0, y, w, 1, `rgb(${Math.floor(8 + t * 12)},${Math.floor(10 + t * 6)},${Math.floor(18 + t * 12)})`);
-  }
-  stars(ctx, w, h * 0.5, 60, 2.0, time, 0, h * 0.45);
+  // Alien sky — gradient
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, 'rgb(8, 10, 18)');
+  grad.addColorStop(1, 'rgb(20, 16, 30)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+
+  stars(ctx, w, h * 0.5, 40, 2.0, time, 0, h * 0.45);
 
   // Two moons
   circle(ctx, w * 0.7, h * 0.18, 6, '#E6DCC8');
   glowCircle(ctx, w * 0.7, h * 0.18, 6, 'rgba(230, 220, 200, ALPHA)', 0.03);
   circle(ctx, w * 0.85, h * 0.3, 3, '#D4C7AC');
 
-  // Alien terrain — jagged
+  // Alien terrain
   const horizon = Math.floor(h * 0.5);
   for (let layer = 0; layer < 3; layer++) {
     const baseY = horizon + layer * Math.floor(h * 0.08);
@@ -181,7 +183,7 @@ export function drawPlanetScene(ctx: CanvasRenderingContext2D, w: number, h: num
     }
   }
 
-  // Strange rock formations
+  // Rock formations
   for (let i = 0; i < 4; i++) {
     const rx = Math.floor((i + 0.3) * w / 4);
     const ry = horizon + Math.floor(h * 0.1);
@@ -190,37 +192,32 @@ export function drawPlanetScene(ctx: CanvasRenderingContext2D, w: number, h: num
     px(ctx, rx - 1, ry - rh, 5, 1, '#2A1F3D');
   }
 
-  // Ground glow — mysterious light
+  // Ground glow
   const gA = 0.1 + 0.05 * Math.sin(time * 0.5);
-  for (let x = 0; x < w; x++) {
-    px(ctx, x, h - 3, 1, 1, `rgba(123, 168, 176, ${gA})`);
-  }
+  fillRow(ctx, h - 3, w, `rgba(123, 168, 176, ${gA})`);
 }
 
 // Scene 5: Unexplained structure
 export function drawStructureScene(ctx: CanvasRenderingContext2D, w: number, h: number, time: number) {
-  // Dark sky
-  for (let y = 0; y < h; y++) {
-    px(ctx, 0, y, w, 1, `rgb(${7},${10},${15})`);
-  }
-  stars(ctx, w, h * 0.6, 50, 4.0, time, 0, h * 0.55);
+  // Dark sky — single fill
+  ctx.fillStyle = '#070A0F';
+  ctx.fillRect(0, 0, w, h);
+
+  stars(ctx, w, h * 0.6, 40, 4.0, time, 0, h * 0.55);
 
   // Ground
   const horizon = Math.floor(h * 0.55);
   px(ctx, 0, horizon, w, h - horizon, '#0B0F18');
 
-  // Ancient structure — arch/monolith
+  // Ancient structure
   const sx = Math.floor(w * 0.35);
   const sw = Math.floor(w * 0.25);
   const sh = Math.floor(h * 0.35);
 
-  // Pillars
   px(ctx, sx, horizon - sh, 5, sh, '#1A2133');
   px(ctx, sx + sw - 5, horizon - sh, 5, sh, '#1A2133');
-  // Arch top
   px(ctx, sx, horizon - sh, sw, 4, '#1A2133');
   px(ctx, sx + 2, horizon - sh - 3, sw - 4, 3, '#252E44');
-  // Inner darkness
   px(ctx, sx + 5, horizon - sh + 4, sw - 10, sh - 4, '#070A0F');
 
   // Glowing runes
@@ -230,7 +227,6 @@ export function drawStructureScene(ctx: CanvasRenderingContext2D, w: number, h: 
     px(ctx, sx + 1, ry, 1, 2, `rgba(232, 185, 122, ${runeGlow * 0.6})`);
     px(ctx, sx + sw - 2, ry, 1, 2, `rgba(232, 185, 122, ${runeGlow * 0.6})`);
   }
-  // Glow from within
   glowCircle(ctx, sx + sw / 2, horizon - sh / 2, 6, `rgba(232, 185, 122, ${runeGlow * 0.06})`, 0.08);
 
   // Tiny figure approaching
@@ -243,6 +239,6 @@ export function drawStructureScene(ctx: CanvasRenderingContext2D, w: number, h: 
   // Mist
   for (let y = horizon - 2; y < horizon + 6; y++) {
     const a = 0.06 * (1 - Math.abs(y - horizon) / 4);
-    px(ctx, 0, y, w, 1, `rgba(82, 64, 107, ${a})`);
+    fillRow(ctx, y, w, `rgba(82, 64, 107, ${a})`);
   }
 }

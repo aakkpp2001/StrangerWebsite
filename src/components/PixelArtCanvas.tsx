@@ -7,6 +7,7 @@ interface PixelArtCanvasProps {
   className?: string;
   scale?: number;
   animated?: boolean;
+  fps?: number;
 }
 
 export default function PixelArtCanvas({
@@ -14,9 +15,9 @@ export default function PixelArtCanvas({
   className = '',
   scale = 3,
   animated = true,
+  fps = 12,
 }: PixelArtCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animRef = useRef<number>(0);
   const drawRef = useRef(draw);
   drawRef.current = draw;
 
@@ -24,46 +25,70 @@ export default function PixelArtCanvas({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: false });
     if (!ctx) return;
 
     ctx.imageSmoothingEnabled = false;
+
+    let width = 0;
+    let height = 0;
 
     const resize = () => {
       const parent = canvas.parentElement;
       if (!parent) return;
       const w = parent.offsetWidth;
       const h = parent.offsetHeight;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
 
-      canvas.width = Math.floor(w * dpr / scale);
-      canvas.height = Math.floor(h * dpr / scale);
+      width = Math.floor((w * dpr) / scale);
+      height = Math.floor((h * dpr) / scale);
+      canvas.width = width;
+      canvas.height = height;
       canvas.style.width = `${w}px`;
       canvas.style.height = `${h}px`;
 
       ctx.imageSmoothingEnabled = false;
-      drawRef.current(ctx, canvas.width, canvas.height, 0);
+      drawRef.current(ctx, width, height, 0);
     };
 
     resize();
     window.addEventListener('resize', resize);
 
-    let startTime = performance.now();
-    const render = () => {
-      const time = (performance.now() - startTime) / 1000;
-      drawRef.current(ctx, canvas.width, canvas.height, time);
-      animRef.current = requestAnimationFrame(render);
+    // Visibility — only animate when on-screen
+    let visible = true;
+    const io = new IntersectionObserver(
+      (entries) => {
+        visible = entries[0].isIntersecting;
+      },
+      { rootMargin: '100px' }
+    );
+    io.observe(canvas);
+
+    // Throttled render loop
+    const frameInterval = 1000 / fps;
+    let lastFrame = 0;
+    let animId = 0;
+    const startTime = performance.now();
+
+    const render = (now: number) => {
+      animId = requestAnimationFrame(render);
+      if (!visible) return;
+      if (now - lastFrame < frameInterval) return;
+      lastFrame = now;
+      const time = (now - startTime) / 1000;
+      drawRef.current(ctx, width, height, time);
     };
 
     if (animated) {
-      render();
+      animId = requestAnimationFrame(render);
     }
 
     return () => {
       window.removeEventListener('resize', resize);
-      cancelAnimationFrame(animRef.current);
+      io.disconnect();
+      cancelAnimationFrame(animId);
     };
-  }, [scale, animated]);
+  }, [scale, animated, fps]);
 
   return (
     <canvas
@@ -89,6 +114,16 @@ export function px(
   ctx.fillRect(Math.floor(x), Math.floor(y), Math.ceil(w), Math.ceil(h));
 }
 
+export function fillRow(
+  ctx: CanvasRenderingContext2D,
+  y: number,
+  w: number,
+  color: string
+) {
+  ctx.fillStyle = color;
+  ctx.fillRect(0, y, w, 1);
+}
+
 export function circle(
   ctx: CanvasRenderingContext2D,
   cx: number,
@@ -97,12 +132,11 @@ export function circle(
   color: string
 ) {
   ctx.fillStyle = color;
+  const fcx = Math.floor(cx);
+  const fcy = Math.floor(cy);
   for (let y = -r; y <= r; y++) {
-    for (let x = -r; x <= r; x++) {
-      if (x * x + y * y <= r * r) {
-        ctx.fillRect(Math.floor(cx + x), Math.floor(cy + y), 1, 1);
-      }
-    }
+    const xMax = Math.floor(Math.sqrt(r * r - y * y));
+    ctx.fillRect(fcx - xMax, fcy + y, xMax * 2 + 1, 1);
   }
 }
 
@@ -114,8 +148,9 @@ export function glowCircle(
   color: string,
   intensity: number = 0.15
 ) {
-  for (let i = r * 3; i >= r; i--) {
-    const alpha = intensity * (1 - (i - r) / (r * 2));
+  const maxR = r * 3;
+  for (let i = maxR; i >= r; i--) {
+    const alpha = intensity * (1 - (i - r) / (maxR - r));
     const c = color.replace('ALPHA', alpha.toFixed(3));
     circle(ctx, cx, cy, i, c);
   }
@@ -126,16 +161,26 @@ export function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
+// Pre-computed noise lookup
+const NOISE_TABLE = new Float32Array(256);
+for (let i = 0; i < 256; i++) {
+  const v = Math.sin(i * 12.9898) * 43758.5453;
+  NOISE_TABLE[i] = v - Math.floor(v);
+}
+
 export function smoothNoise(x: number, seed: number = 0) {
-  const i = Math.floor(x);
-  const f = x - i;
-  const a = Math.sin((i + seed) * 12.9898) * 43758.5453;
-  const b = Math.sin((i + 1 + seed) * 12.9898) * 43758.5453;
-  const fa = a - Math.floor(a);
-  const fb = b - Math.floor(b);
+  const i = Math.floor(x) & 255;
+  const next = (i + 1) & 255;
+  const f = x - Math.floor(x);
+  const fa = NOISE_TABLE[(i + seed) & 255];
+  const fb = NOISE_TABLE[(next + seed) & 255];
   const t = f * f * (3 - 2 * f);
   return fa * (1 - t) + fb * t;
 }
+
+// Pre-computed star positions
+interface StarPos { x: number; y: number; size: number; phase: number; }
+const starCache = new Map<string, StarPos[]>();
 
 export function stars(
   ctx: CanvasRenderingContext2D,
@@ -147,14 +192,27 @@ export function stars(
   yStart: number = 0,
   yEnd: number = Infinity
 ) {
-  for (let i = 0; i < count; i++) {
-    const sx = Math.abs(Math.sin(i * 78.233 + seed) * 43758.5453) % 1;
-    const sy = Math.abs(Math.sin(i * 43.123 + seed * 2) * 43758.5453) % 1;
-    const x = Math.floor(sx * w);
-    const y = Math.floor(sy * h);
-    if (y < yStart || y > yEnd) continue;
-    const tw = 0.4 + 0.6 * Math.abs(Math.sin(time * 0.5 + i * 1.7));
-    const s = i % 7 === 0 ? 1.5 : i % 3 === 0 ? 1 : 0.7;
-    px(ctx, x, y, s, s, `rgba(250, 246, 238, ${tw * 0.7})`);
+  const key = `${w}x${h}_${count}_${seed}`;
+  let positions = starCache.get(key);
+  if (!positions) {
+    positions = [];
+    for (let i = 0; i < count; i++) {
+      const sx = Math.abs(Math.sin(i * 78.233 + seed) * 43758.5453) % 1;
+      const sy = Math.abs(Math.sin(i * 43.123 + seed * 2) * 43758.5453) % 1;
+      positions.push({
+        x: Math.floor(sx * w),
+        y: Math.floor(sy * h),
+        size: i % 7 === 0 ? 1.5 : i % 3 === 0 ? 1 : 0.7,
+        phase: i * 1.7,
+      });
+    }
+    starCache.set(key, positions);
+  }
+
+  for (let i = 0; i < positions.length; i++) {
+    const s = positions[i];
+    if (s.y < yStart || s.y > yEnd) continue;
+    const tw = 0.4 + 0.6 * Math.abs(Math.sin(time * 0.5 + s.phase));
+    px(ctx, s.x, s.y, s.size, s.size, `rgba(250, 246, 238, ${tw * 0.7})`);
   }
 }
